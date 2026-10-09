@@ -4,10 +4,10 @@
 
 ## Thông tin học viên
 
-- Họ tên:
-- MSSV:
-- Email:
-- Link repo (fork):
+- Họ tên: Trần Đình Duy
+- MSSV: 2A202602631
+- Email: trandinhduy26062006@gmail.com
+- Link repo (fork): https://github.com/Duytd26/K4-L2L3-DAY23-TranDinhDuy-2A202602631-SensorFusion
 - Commit hash nộp (`git rev-parse HEAD`):
 
 ## Tóm tắt kết quả
