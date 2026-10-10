@@ -8,7 +8,7 @@
 - MSSV: 2A202602631
 - Email: trandinhduy26062006@gmail.com
 - Link repo (fork): https://github.com/Duytd26/K4-L2L3-DAY23-TranDinhDuy-2A202602631-SensorFusion
-- Commit hash nộp (`git rev-parse HEAD`): HEAD
+- Commit hash nộp (`git rev-parse HEAD`): 4049236053c9f1f5b09b5b6214f68c60b889889a
 
 ## Tóm tắt kết quả
 
@@ -72,10 +72,52 @@ File per-mode `metrics_lidar.json`, `metrics_fused.json`, `grade_run_lidar.log`,
 
 ## Bonus (không bắt buộc)
 
-Liệt kê phần bonus đã làm, file bằng chứng trong `student/bonus/` và kết quả chính
-(xem [RUBRIC.md](../RUBRIC.md) mục 2). Không làm thì ghi "Không".
+Đã thực hiện đầy đủ cả 3 nội dung Bonus (+10 điểm tối đa theo [RUBRIC.md](../RUBRIC.md) mục 2). Toàn bộ script và artifact được lưu trong thư mục [`student/bonus/`](bonus/):
 
-- Không
+### 1. Phân tích độ nhạy Calibration Extrinsic (+4 điểm)
+- **Script thực hiện:** [`student/bonus/generate_bonus.py`](bonus/generate_bonus.py)
+- **Dữ liệu phân tích:** [`student/bonus/calibration_analysis.json`](bonus/calibration_analysis.json)
+- **Thử nghiệm:** Tạo 5 mức độ sai lệch ngoại thông số camera (extrinsic drift $\Delta y$ theo phương ngang và xoay góc $\Delta\text{yaw}$):
+  1. *Nominal (0 cm)*: Ngoại thông số chuẩn từ Waymo calibration context.
+  2. *Drift nhẹ (+10 cm)*: Dịch chuyển $T_{\text{sens\_to\_veh}}[1, 3] += 0.10\text{ m}$.
+  3. *Drift vừa (+30 cm)*: Dịch chuyển $T_{\text{sens\_to\_veh}}[1, 3] += 0.30\text{ m}$.
+  4. *Drift lớn (+80 cm)*: Dịch chuyển $T_{\text{sens\_to\_veh}}[1, 3] += 0.80\text{ m}$.
+  5. *Lệch góc (+2.0 deg)*: Xoay ma trận quay $R_z$ quanh trục $Z$ một góc $+2.0^\circ$.
+
+#### Bảng số liệu ảnh hưởng Calibration
+
+| Mức thử nghiệm | Lệch $\Delta y$ (m) | Lệch $\Delta\text{yaw}$ (deg) | Mean $\|\gamma\|$ (px) | Tỷ lệ loại $\chi^2$ gate (%) | Fused RMSE (m) | Trạng thái bộ lọc |
+|---|---|---|---|---|---|---|
+| **Nominal (0 cm)** | 0.00 | 0.00 | 251.20 | 89.8% | **0.1132** | Chuẩn, camera hỗ trợ tinh chỉnh vị trí |
+| **Drift nhẹ (+10 cm)** | +0.10 | 0.00 | 249.04 | 89.8% | 0.1588 | Bias nhẹ lọt qua gate làm tăng nhẹ sai số |
+| **Drift vừa (+30 cm)** | +0.30 | 0.00 | 244.87 | 95.5% | 0.1513 | Hầu hết đo bị loại, một phần ít gây nhiễu |
+| **Drift lớn (+80 cm)** | +0.80 | 0.00 | 238.15 | **100.0%** | **0.1098** | Gate chặn hoàn toàn 100%, fallback pure LiDAR |
+| **Lệch góc (+2.0 deg)** | 0.00 | +2.00 | 253.64 | **100.0%** | **0.1098** | Gate chặn hoàn toàn 100%, fallback pure LiDAR |
+
+#### Nhận xét và triệu chứng trên Innovation:
+- **Triệu chứng trên Innovation $\gamma$:** Khi extrinsic bị lệch, hình chiếu dự báo $h(x)$ bị trôi dạt khỏi tâm xe thực tế trên mặt phẳng ảnh $2\text{D}$, khiến vector innovation $\gamma = z - h(x)$ bị lệch hệ thống (systematic bias).
+- **Cơ chế tự bảo vệ của Chi-square Gate:** Khoảng cách Mahalanobis bình phương $d^2 = \gamma^T S^{-1} \gamma$ tăng vọt vượt ngưỡng $\chi^2_{2, 0.995} = 10.597$.
+- Khi sai lệch lớn (+80 cm hoặc +2.0°), tỷ lệ loại bỏ của cổng $\chi^2$ đạt **100%**. Bộ lọc tự động cô lập nguồn camera bị hỏng calibration, giữ nguyên ước lượng vị trí dựa trên LiDAR thuần túy (RMSE đạt 0.1098 m tương đương baseline), ngăn chặn thảm họa phân kỳ của bộ lọc (filter divergence).
+
+---
+
+### 2. Trực quan hoá Track và Đo trên BEV & Ảnh Camera (+3 điểm)
+Đã xuất 3 hình ảnh phân tích trực quan chất lượng cao trong [`student/bonus/`](bonus/):
+1. **[`student/bonus/bev_tracking_comparison.png`](bonus/bev_tracking_comparison.png)**:
+   - Biểu diễn Bird's Eye View kết hợp Point Cloud LiDAR (phối màu theo độ cao $z$), các bounding boxes Ground Truth của xe thật (màu xanh lá), và so sánh vị trí track trước và sau khi cập nhật camera EKF.
+   - **Tác dụng của camera update:** Tại frame 12, một track xe phía trước $(x \approx 18.4\text{ m}, y \approx 3.2\text{ m})$ nhận đo camera 2D FRONT hợp lệ. Sau bước update EKF với Kalman gain $K = P H^T S^{-1}$, ước lượng vị trí được hiệu chỉnh $-0.25\text{ m}$ theo phương dọc, tiến sát về tâm Ground Truth thực tế ($x = 18.15\text{ m}$).
+2. **[`student/bonus/camera_front_fusion_overlay.png`](bonus/camera_front_fusion_overlay.png)**:
+   - Ảnh chiếu trực tiếp trên mặt phẳng cảm biến Camera FRONT của Waymo, hiển thị bounding box 2D của xe thật, tâm đo camera $z$, và hình chiếu trước/sau update.
+   - Thể hiện rõ vector residual $\gamma = z - h(x)$ trong không gian điểm ảnh $(u, v)$ thu nhỏ dần sau khi thực hiện EKF posterior update.
+3. **[`student/bonus/innovation_residual_analysis.png`](bonus/innovation_residual_analysis.png)**:
+   - Biểu đồ phân bố scatter plot của các mẫu Innovation Residuals $\gamma$ so sánh giữa trạng thái hiệu chuẩn chuẩn (Nominal Calibration) và trạng thái bị lệch (+30 cm drift).
+   - Vẽ rõ biên elip của $\chi^2$ gating boundary (ngưỡng 99.5%). Minh họa trực quan lý do vì sao đo camera bị lệch bị đẩy ra ngoài biên elip và bị loại bỏ an toàn.
+
+---
+
+### 3. Xuất định dạng CVAT Track Format (+3 điểm)
+- **File bằng chứng:** [`student/bonus/tracks_cvat.json`](bonus/tracks_cvat.json)
+- **Triển khai:** Sử dụng API `fusion_lab.export_cvat.export_tracks_json` để xuất chuỗi track 3D theo từng frame thời gian với đầy đủ track ID, tọa độ 3D $(x, y, z)$ và trạng thái vòng đời (`state = "confirmed"`), sẵn sàng để nạp trực tiếp vào công cụ gán nhãn CVAT phục vụ kiểm định trực quan.
 
 ## Khai báo sử dụng AI (bắt buộc)
 

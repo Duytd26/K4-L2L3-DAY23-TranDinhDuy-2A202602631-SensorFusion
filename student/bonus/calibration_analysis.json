@@ -1,0 +1,47 @@
+[
+  {
+    "name": "Nominal (0 cm)",
+    "dy_m": 0.0,
+    "dyaw_deg": 0.0,
+    "mean_innovation_px": 251.2,
+    "gate_rejection_rate_pct": 89.8,
+    "fused_rmse_m": 0.1132,
+    "status": "Gating rejects outliers"
+  },
+  {
+    "name": "Drift nhẹ (+10 cm)",
+    "dy_m": 0.1,
+    "dyaw_deg": 0.0,
+    "mean_innovation_px": 249.04,
+    "gate_rejection_rate_pct": 89.8,
+    "fused_rmse_m": 0.1588,
+    "status": "Gating rejects outliers"
+  },
+  {
+    "name": "Drift vừa (+30 cm)",
+    "dy_m": 0.3,
+    "dyaw_deg": 0.0,
+    "mean_innovation_px": 244.87,
+    "gate_rejection_rate_pct": 95.5,
+    "fused_rmse_m": 0.1513,
+    "status": "Gating rejects outliers"
+  },
+  {
+    "name": "Drift lớn (+80 cm)",
+    "dy_m": 0.8,
+    "dyaw_deg": 0.0,
+    "mean_innovation_px": 238.15,
+    "gate_rejection_rate_pct": 100.0,
+    "fused_rmse_m": 0.1098,
+    "status": "Gating rejects outliers"
+  },
+  {
+    "name": "Lệch góc (+2.0 deg)",
+    "dy_m": 0.0,
+    "dyaw_deg": 2.0,
+    "mean_innovation_px": 253.64,
+    "gate_rejection_rate_pct": 100.0,
+    "fused_rmse_m": 0.1098,
+    "status": "Gating rejects outliers"
+  }
+]
