@@ -8,7 +8,7 @@
 - MSSV: 2A202602631
 - Email: trandinhduy26062006@gmail.com
 - Link repo (fork): https://github.com/Duytd26/K4-L2L3-DAY23-TranDinhDuy-2A202602631-SensorFusion
-- Commit hash nộp (`git rev-parse HEAD`): HEAD
+- Commit hash nộp (`git rev-parse HEAD`): 1fecf0dea206e3e12f43bc1a56ac2a9f97372b18
 
 ## Tóm tắt kết quả
 
